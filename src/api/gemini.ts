@@ -2,7 +2,7 @@ import type { ContentAnalysis } from '../types/analysis';
 import type { RecallFeedback } from '../types/feedback';
 import { ANALYZE_CONTENT_PROMPT, createCompareRecallPrompt, createDeepDivePrompt } from './prompts';
 
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 interface GeminiResponse {
   candidates: Array<{
