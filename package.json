@@ -1,7 +1,7 @@
 {
-  "name": "active-recall-extension",
+  "name": "echo-extension",
   "version": "1.0.0",
-  "description": "Active Recall learning Chrome extension - AI-powered feedback on your memory",
+  "description": "Echo - AI-powered learning feedback extension",
   "scripts": {
     "dev": "webpack --mode development --watch",
     "build": "webpack --mode production",

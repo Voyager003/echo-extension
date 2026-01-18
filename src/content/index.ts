@@ -34,4 +34,4 @@ chrome.runtime.onMessage.addListener(
 );
 
 // Log that content script is loaded (for debugging)
-console.log('[Active Recall] Content script loaded');
+console.log('[Echo] Content script loaded');

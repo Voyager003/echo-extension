@@ -19,7 +19,7 @@ export function ReadyView({ onStartLearning }: ReadyViewProps) {
       </div>
 
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-        Active Recall 학습
+        Echo 학습
       </h2>
 
       <p className="text-gray-600 dark:text-gray-400 text-center mb-8 max-w-xs">
