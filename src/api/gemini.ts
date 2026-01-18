@@ -46,18 +46,18 @@ async function callGemini(
 
   if (!response.ok) {
     const errorText = await response.text();
-    let errorMessage = 'API 호출에 실패했습니다.';
+    console.error('Gemini API Error:', response.status, errorText);
 
-    if (response.status === 401) {
-      errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요.';
-    } else if (response.status === 429) {
-      errorMessage = 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.';
-    } else if (response.status >= 500) {
-      errorMessage = 'Gemini 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.';
+    // Parse error details
+    let errorDetail = '';
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorDetail = errorJson.error?.message || errorText;
+    } catch {
+      errorDetail = errorText;
     }
 
-    console.error('Gemini API Error:', response.status, errorText);
-    throw new Error(errorMessage);
+    throw new Error(`[${response.status}] ${errorDetail}`);
   }
 
   const data: GeminiResponse = await response.json();
