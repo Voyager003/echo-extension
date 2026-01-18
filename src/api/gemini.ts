@@ -2,7 +2,7 @@ import type { ContentAnalysis } from '../types/analysis';
 import type { RecallFeedback } from '../types/feedback';
 import { ANALYZE_CONTENT_PROMPT, createCompareRecallPrompt, createDeepDivePrompt } from './prompts';
 
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 interface GeminiResponse {
   candidates: Array<{
@@ -47,7 +47,6 @@ async function callGemini(
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Gemini API Error:', response.status, errorText);
 
     let errorDetail = '';
     try {
@@ -71,8 +70,7 @@ function parseJSON<T>(text: string): T {
 
   try {
     return JSON.parse(jsonStr.trim());
-  } catch (error) {
-    console.error('Failed to parse JSON:', text);
+  } catch {
     throw new Error('응답을 파싱하는데 실패했습니다.');
   }
 }

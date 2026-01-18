@@ -32,6 +32,3 @@ chrome.runtime.onMessage.addListener(
     return true;
   }
 );
-
-// Log that content script is loaded (for debugging)
-console.log('[Echo] Content script loaded');

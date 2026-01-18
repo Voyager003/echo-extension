@@ -6,7 +6,4 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 // Set up side panel behavior
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(console.error);
-
-// Log that background script is loaded
-console.log('[Echo] Background service worker loaded');
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
