@@ -57,14 +57,6 @@ async function callGemini(
       errorDetail = errorText;
     }
 
-    if (response.status === 400) {
-      throw new Error('API 키가 유효하지 않습니다. 설정에서 올바른 API 키를 입력해주세요.');
-    } else if (response.status === 429) {
-      throw new Error('API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.');
-    } else if (response.status >= 500) {
-      throw new Error('Gemini 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
-    }
-
     throw new Error(`[${response.status}] ${errorDetail}`);
   }
 
