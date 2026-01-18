@@ -7,7 +7,7 @@ interface ErrorViewProps {
 }
 
 export function ErrorView({ error, onRetry, onBack }: ErrorViewProps) {
-  const isApiKeyError = error.toLowerCase().includes('api') || error.toLowerCase().includes('key');
+  const isAuthError = error.includes('로그인') || error.includes('인증');
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6 animate-fade-in">
@@ -30,10 +30,10 @@ export function ErrorView({ error, onRetry, onBack }: ErrorViewProps) {
         {error}
       </p>
 
-      {isApiKeyError && (
+      {isAuthError && (
         <div className="mb-6 p-4 bg-warning-50 dark:bg-warning-500/10 rounded-lg text-sm text-warning-600 dark:text-warning-500">
-          <p className="font-medium mb-1">API 키가 필요합니다</p>
-          <p>설정에서 Claude API 키를 입력해주세요.</p>
+          <p className="font-medium mb-1">로그인이 필요합니다</p>
+          <p>Google 계정으로 로그인해주세요.</p>
         </div>
       )}
 
