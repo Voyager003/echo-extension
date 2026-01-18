@@ -10,7 +10,6 @@
       "https://www.googleapis.com/auth/generative-language.retriever"
     ]
   },
-  "key": "YOUR_EXTENSION_KEY",
   "side_panel": {
     "default_path": "sidepanel.html"
   },
@@ -25,7 +24,7 @@
     }
   ],
   "action": {
-    "default_title": "Active Recall",
+    "default_title": "Echo",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
