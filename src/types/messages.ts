@@ -5,9 +5,10 @@ export type MessageType =
   | 'ANALYZE_CONTENT_RESULT'
   | 'COMPARE_RECALL'
   | 'COMPARE_RECALL_RESULT'
-  | 'GET_API_KEY'
-  | 'GET_API_KEY_RESULT'
-  | 'SAVE_API_KEY'
+  | 'GET_AUTH_TOKEN'
+  | 'LOGIN'
+  | 'LOGOUT'
+  | 'CHECK_AUTH'
   | 'DEEP_DIVE_QUESTION'
   | 'DEEP_DIVE_ANSWER';
 
@@ -54,18 +55,20 @@ export interface CompareRecallResultMessage extends BaseMessage {
   error?: string;
 }
 
-export interface GetApiKeyMessage extends BaseMessage {
-  type: 'GET_API_KEY';
+export interface GetAuthTokenMessage extends BaseMessage {
+  type: 'GET_AUTH_TOKEN';
 }
 
-export interface GetApiKeyResultMessage extends BaseMessage {
-  type: 'GET_API_KEY_RESULT';
-  apiKey?: string;
+export interface LoginMessage extends BaseMessage {
+  type: 'LOGIN';
 }
 
-export interface SaveApiKeyMessage extends BaseMessage {
-  type: 'SAVE_API_KEY';
-  apiKey: string;
+export interface LogoutMessage extends BaseMessage {
+  type: 'LOGOUT';
+}
+
+export interface CheckAuthMessage extends BaseMessage {
+  type: 'CHECK_AUTH';
 }
 
 export interface DeepDiveQuestionMessage extends BaseMessage {
@@ -89,9 +92,10 @@ export type Message =
   | AnalyzeContentResultMessage
   | CompareRecallMessage
   | CompareRecallResultMessage
-  | GetApiKeyMessage
-  | GetApiKeyResultMessage
-  | SaveApiKeyMessage
+  | GetAuthTokenMessage
+  | LoginMessage
+  | LogoutMessage
+  | CheckAuthMessage
   | DeepDiveQuestionMessage
   | DeepDiveAnswerMessage;
 

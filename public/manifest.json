@@ -1,9 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Active Recall",
+  "name": "Echo",
   "version": "1.0.0",
-  "description": "Learn better by recalling what you read - AI-powered feedback on your memory",
-  "permissions": ["sidePanel", "activeTab", "storage"],
+  "description": "Echo - AI-powered learning feedback extension",
+  "permissions": ["sidePanel", "activeTab", "storage", "identity"],
+  "oauth2": {
+    "client_id": "YOUR_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/generative-language.retriever"
+    ]
+  },
+  "key": "YOUR_EXTENSION_KEY",
   "side_panel": {
     "default_path": "sidepanel.html"
   },
