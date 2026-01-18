@@ -3,15 +3,7 @@
   "name": "Echo",
   "version": "1.0.0",
   "description": "Echo - AI-powered learning feedback extension",
-  "permissions": ["sidePanel", "activeTab", "storage", "identity"],
-  "oauth2": {
-    "client_id": "255853467646-fsgsbe9o0bgpslp9dl2es0e70ibpevou.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/generative-language.tuning",
-      "https://www.googleapis.com/auth/cloud-platform",
-      "email"
-    ]
-  },
+  "permissions": ["sidePanel", "activeTab", "storage"],
   "side_panel": {
     "default_path": "sidepanel.html"
   },
