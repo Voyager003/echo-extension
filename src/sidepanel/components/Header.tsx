@@ -4,16 +4,17 @@ interface HeaderProps {
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   onOpenSettings: () => void;
+  userEmail?: string | null;
 }
 
-export function Header({ isDarkMode, onToggleDarkMode, onOpenSettings }: HeaderProps) {
+export function Header({ isDarkMode, onToggleDarkMode, onOpenSettings, userEmail }: HeaderProps) {
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-sm">AR</span>
+          <span className="text-white font-bold text-sm">E</span>
         </div>
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Active Recall</h1>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Echo</h1>
       </div>
 
       <div className="flex items-center gap-2">

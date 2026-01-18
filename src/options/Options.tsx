@@ -1,64 +1,65 @@
 import React, { useState, useEffect } from 'react';
-import { validateApiKey } from '../api/claude';
-
-type ValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
 
 export function Options() {
-  const [apiKey, setApiKey] = useState('');
-  const [savedApiKey, setSavedApiKey] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [validationStatus, setValidationStatus] = useState<ValidationStatus>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load saved settings
-    chrome.storage.sync.get(['claude_api_key', 'dark_mode'], (result) => {
-      if (result.claude_api_key) {
-        setApiKey(result.claude_api_key);
-        setSavedApiKey(result.claude_api_key);
-      }
-      if (result.dark_mode) {
-        setIsDarkMode(result.dark_mode);
-        document.documentElement.classList.add('dark');
-      }
-    });
+    checkAuthStatus();
+    loadDarkMode();
   }, []);
 
-  const handleSaveApiKey = async () => {
-    if (!apiKey.trim()) {
-      setErrorMessage('API 키를 입력해주세요.');
-      setStatus('error');
-      return;
-    }
-
-    setStatus('saving');
-    setValidationStatus('validating');
-    setErrorMessage('');
-
+  const checkAuthStatus = async () => {
+    setLoading(true);
     try {
-      // Validate the API key
-      const isValid = await validateApiKey(apiKey.trim());
+      const response = await chrome.runtime.sendMessage({ type: 'CHECK_AUTH' });
+      setIsLoggedIn(response.isLoggedIn);
+      setEmail(response.email || null);
+    } catch (err) {
+      console.error('Failed to check auth:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      if (!isValid) {
-        setValidationStatus('invalid');
-        setErrorMessage('API 키가 유효하지 않습니다. 올바른 키를 입력해주세요.');
-        setStatus('error');
-        return;
+  const loadDarkMode = async () => {
+    const result = await chrome.storage.sync.get('dark_mode');
+    if (result.dark_mode) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    }
+  };
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'LOGIN' });
+      if (response.success) {
+        await checkAuthStatus();
+      } else {
+        setError(response.error || '로그인에 실패했습니다.');
       }
+    } catch (err) {
+      setError('로그인 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      setValidationStatus('valid');
-
-      // Save the API key
-      await chrome.storage.sync.set({ claude_api_key: apiKey.trim() });
-      setSavedApiKey(apiKey.trim());
-      setStatus('saved');
-
-      setTimeout(() => setStatus('idle'), 3000);
-    } catch (error) {
-      setStatus('error');
-      setValidationStatus('invalid');
-      setErrorMessage('API 키 검증 중 오류가 발생했습니다.');
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await chrome.runtime.sendMessage({ type: 'LOGOUT' });
+      setIsLoggedIn(false);
+      setEmail(null);
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,114 +76,95 @@ export function Options() {
     chrome.storage.sync.set({ dark_mode: newDarkMode });
   };
 
-  const handleDeleteApiKey = async () => {
-    if (confirm('API 키를 삭제하시겠습니까?')) {
-      await chrome.storage.sync.remove('claude_api_key');
-      setApiKey('');
-      setSavedApiKey('');
-      setValidationStatus('idle');
-      setStatus('idle');
-    }
-  };
-
-  const maskedApiKey = savedApiKey
-    ? `${savedApiKey.substring(0, 10)}${'*'.repeat(20)}${savedApiKey.substring(savedApiKey.length - 4)}`
-    : '';
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4">
       <div className="max-w-xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">AR</span>
+            <span className="text-white font-bold text-2xl">E</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Active Recall 설정</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Echo 설정</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">확장 프로그램 설정을 관리합니다</p>
         </div>
 
-        {/* API Key Section */}
+        {/* Google Login Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Claude API 키</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Google 계정 연결</h2>
 
-          {savedApiKey && (
-            <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-green-700 dark:text-green-300">API 키가 설정되어 있습니다</p>
-                  <p className="text-xs text-green-600 dark:text-green-400 font-mono mt-1">{maskedApiKey}</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : isLoggedIn ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-700 dark:text-green-300">연결됨</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">{email}</p>
+                  </div>
                 </div>
-                <button
-                  onClick={handleDeleteApiKey}
-                  className="text-red-500 hover:text-red-600 text-sm"
-                >
-                  삭제
-                </button>
               </div>
+
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Google 계정으로 로그인하면 Gemini AI를 사용하여 학습 피드백을 받을 수 있습니다.
+              </p>
+
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleLogin}
+                disabled={loading}
+                className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-3 disabled:opacity-50"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path
+                    fill="#4285F4"
+                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                  />
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                  />
+                </svg>
+                <span className="font-medium text-gray-700 dark:text-gray-200">Google로 로그인</span>
+              </button>
             </div>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {savedApiKey ? '새 API 키로 변경' : 'API 키 입력'}
-              </label>
-              <input
-                id="apiKey"
-                type="password"
-                value={apiKey}
-                onChange={(e) => {
-                  setApiKey(e.target.value);
-                  setValidationStatus('idle');
-                  setStatus('idle');
-                  setErrorMessage('');
-                }}
-                placeholder="sk-ant-api..."
-                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-
-            {errorMessage && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
-              </div>
-            )}
-
-            {validationStatus === 'valid' && status === 'saved' && (
-              <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-sm text-green-600 dark:text-green-400">✓ API 키가 저장되었습니다!</p>
-              </div>
-            )}
-
-            <button
-              onClick={handleSaveApiKey}
-              disabled={status === 'saving' || !apiKey.trim()}
-              className="w-full px-4 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-medium rounded-lg transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {status === 'saving' ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {validationStatus === 'validating' ? '검증 중...' : '저장 중...'}
-                </>
-              ) : (
-                '저장'
-              )}
-            </button>
-          </div>
-
           <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">API 키가 없으신가요?</span>
+              <span className="font-medium">Gemini AI 사용</span>
               <br />
-              <a
-                href="https://console.anthropic.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary-500 hover:text-primary-600"
-              >
-                Anthropic Console
-              </a>
-              에서 API 키를 발급받을 수 있습니다.
+              Google의 Gemini Flash 모델을 사용하여 빠르고 정확한 피드백을 제공합니다.
+              무료로 사용 가능합니다.
             </p>
           </div>
         </div>
@@ -213,8 +195,8 @@ export function Options() {
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>Active Recall v1.0.0</p>
-          <p className="mt-1">AI 기반 능동 학습 확장 프로그램</p>
+          <p>Echo v1.0.0</p>
+          <p className="mt-1">Powered by Google Gemini AI</p>
         </div>
       </div>
     </div>
