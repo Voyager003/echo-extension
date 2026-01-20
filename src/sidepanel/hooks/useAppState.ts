@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { ContentAnalysis } from '../../types/analysis';
 import type { RecallFeedback } from '../../types/feedback';
 
-export type AppView = 'ready' | 'loading' | 'writing' | 'analyzing' | 'feedback' | 'error';
+export type AppView = 'ready' | 'loading' | 'writing' | 'analyzing' | 'feedback' | 'error' | 'history' | 'historyDetail';
 
 export interface AppState {
   view: AppView;
