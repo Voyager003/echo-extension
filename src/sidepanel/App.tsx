@@ -7,13 +7,18 @@ import { WritingView } from './components/WritingView';
 import { ErrorView } from './components/ErrorView';
 import { FeedbackView } from './components/FeedbackView';
 import { ApiKeyPrompt } from './components/ApiKeyPrompt';
+import { HistoryView } from './components/HistoryView';
+import { HistoryDetailView } from './components/HistoryDetailView';
 import { analyzeContent, compareRecall, answerDeepDive } from '../api/gemini';
+import { saveLearningRecord } from './utils/storage';
+import type { LearningRecord } from '../types/history';
 
 const API_KEY_STORAGE_KEY = 'gemini_api_key';
 
 export function App() {
   const { state, actions } = useAppState();
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<LearningRecord | null>(null);
 
   useEffect(() => {
     checkApiKey();
@@ -129,6 +134,36 @@ export function App() {
     setHasApiKey(true);
   }, []);
 
+  const handleSaveRecord = useCallback(async () => {
+    if (!state.analysis || !state.feedback) return;
+
+    await saveLearningRecord(
+      state.pageTitle,
+      state.pageUrl,
+      state.userRecall,
+      state.analysis,
+      state.feedback
+    );
+  }, [state.pageTitle, state.pageUrl, state.userRecall, state.analysis, state.feedback]);
+
+  const handleViewHistory = useCallback(() => {
+    actions.setView('history');
+  }, [actions]);
+
+  const handleViewRecord = useCallback((record: LearningRecord) => {
+    setSelectedRecord(record);
+    actions.setView('historyDetail');
+  }, [actions]);
+
+  const handleBackFromHistory = useCallback(() => {
+    actions.reset();
+  }, [actions]);
+
+  const handleBackFromDetail = useCallback(() => {
+    setSelectedRecord(null);
+    actions.setView('history');
+  }, [actions]);
+
   // Show loading while checking API key
   if (hasApiKey === null) {
     return (
@@ -170,7 +205,9 @@ export function App() {
       />
 
       <main className="flex-1 overflow-auto">
-        {state.view === 'ready' && <ReadyView onStartLearning={handleStartLearning} />}
+        {state.view === 'ready' && (
+          <ReadyView onStartLearning={handleStartLearning} onViewHistory={handleViewHistory} />
+        )}
 
         {state.view === 'loading' && <LoadingView message="페이지 내용을 분석 중..." />}
 
@@ -181,11 +218,24 @@ export function App() {
         {state.view === 'analyzing' && <LoadingView message="AI가 피드백을 생성 중..." />}
 
         {state.view === 'feedback' && state.feedback && (
-          <FeedbackView feedback={state.feedback} onDeepDive={handleDeepDive} onBack={handleBack} />
+          <FeedbackView
+            feedback={state.feedback}
+            onDeepDive={handleDeepDive}
+            onBack={handleBack}
+            onSave={handleSaveRecord}
+          />
         )}
 
         {state.view === 'error' && (
           <ErrorView error={state.error || '알 수 없는 오류'} onRetry={handleRetry} onBack={handleBack} />
+        )}
+
+        {state.view === 'history' && (
+          <HistoryView onBack={handleBackFromHistory} onViewRecord={handleViewRecord} />
+        )}
+
+        {state.view === 'historyDetail' && selectedRecord && (
+          <HistoryDetailView record={selectedRecord} onBack={handleBackFromDetail} />
         )}
       </main>
     </div>
